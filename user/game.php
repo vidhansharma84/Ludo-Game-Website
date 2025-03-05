@@ -1,8 +1,8 @@
-<?php  
+<?php 
 
-require_once('../backend/config.php');
+include('../backend/config.php');
 
-$uid = checkUserLogin();
+$uid = $_SESSION['uid'];
 
 // Get user details
 $sql = "SELECT * FROM user WHERE id='$uid'";
@@ -11,6 +11,8 @@ $row = mysqli_fetch_array($result);
 $name = $row['name'];
 
 ?>
+
+<!-- v1.0 -->
 <!DOCTYPE html>
 <html lang="en">
 
@@ -26,110 +28,80 @@ $name = $row['name'];
     <meta property="og:image" content="https://playludoonline.netlify.app/images/ludositepreview.jpg" />
     <meta name="mobile-web-app-capable" content="yes">
     <link rel="manifest" href="manifest.json">
-
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
     <link rel="shortcut icon" href="images/favicon.ico" type="image/x-icon">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        // Pass PHP variables to JavaScript
-        var playerName = <?php echo json_encode($name); ?>;
-    </script>
-
-    <style>
-        /* Only keep essential styles */
-        .game-container {
-            display: none;  
-            /* This is the only style we need to keep */
-        }
-    </style>
-
-    <!-- Add toast notifications library -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
 
 </head>
 
-<body>   
-    
+<body>
+    <!-- <header>
+        <h1>Play Ludo Online</h1>
+    </header> -->
+    <?php include ("navbar.php");?>
     <div id="home-container">
-    <?php include 'navbar.php'; ?>
         <div id="home">
-            <!-- <div id="game-logo">                
+            <div id="game-logo">
                 <div>
-                    Select Number Of Players
+                    <img src="images/gameLogo.svg" alt="Play Ludo Online">
+                </div>
+                <div>
+                    Play Ludo Online
                 </div>
             </div>
             <div id="noOfplayerBox">
-                <div id="twoPlayer" class="noOfPlayer">2P</div>
-                <div id="threePlayer" class="noOfPlayer">3P</div>
-                <div id="fourPlayer" class="noOfPlayer selected">4P</div>
-            </div> -->
-            <div id="multiplayer-controls" class="mb-4">
-                <div class="flex space-x-4 justify-center mb-4" id="gameControls">
-                    <button id="createGameBtn" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
-                        Create Game
-                    </button>
-                    <div class="flex space-x-2">
-                        <input type="text" id="gameIdInput" placeholder="Enter Game ID" 
-                               class="border rounded px-2">
-                        <button id="joinGameBtn" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
-                            Join Game
-                        </button>
-                    </div>
-                </div>
-
-                <div id="waitingRoom" class="mt-4 text-center hidden bg-white p-4 rounded-lg shadow">
-                    <h3 class="text-xl font-bold mb-2">Game Room</h3>
-                    <div id="gameIdDisplay" class="p-2 bg-blue-50 rounded border border-blue-200 inline-block mb-4">
-                        <span class="mr-2">Game ID:</span>
-                        <span id="currentGameId" class="font-bold text-blue-600"></span>
-                        <button onclick="copyGameId()" class="ml-2 text-blue-500 hover:text-blue-700">
-                            <i class="fas fa-copy"></i>
-                        </button>
-                    </div>
-                    <div id="playersList" class="space-y-2 max-w-md mx-auto"></div>
-                </div>
-
-                <!-- Add game status indicator -->
-                <div id="gameStatus" class="mt-4 text-center hidden">
-                    <div class="bg-blue-100 p-4 rounded-lg shadow inline-block">
-                        <span id="statusText" class="font-bold text-blue-800"></span>
-                        <div id="turnTimer" class="text-sm text-blue-600 mt-2"></div>
-                    </div>
-                </div>
+                <!-- <div id="twoPlayer" class="noOfPlayer selected">2P</div>
+                <div id="threePlayer" class="noOfPlayer">3P</div> -->
+                <!-- <div id="fourPlayer" class="noOfPlayer">Start</div> -->
             </div>
-            <button id="startGame" class="hidden">Start</button>
+            Player name
+             <input type="text" id="pName" placeholder="Enter your name" value="<?php echo $name;?>" hidden/> </br></br></br>
+            <button id="startGame">Start</button>
         </div>
+        <!-- <div id="owner">Made By <a href="https://github.com/vishalmishra090">Vishal Mishra</a></div> -->
     </div>
 
     <main>
 
-        <div class="game-container">       
+        <div class="game-container">
+
+            <!-- Create a wraper class to maintain aspect ratio -->
+            <!-- https://playcode.io/659836/ -->
+            <!-- https://codepen.io/vishalmishra090/pen/ExKmbRG -->
+            <!-- https://stackoverflow.com/questions/1495407/maintain-the-aspect-ratio-of-a-div-with-css -->
             <div class="wrap-box">
+
+
+
                 <div class="game-box">
+                    <div class="pb15">
+                        <span class="playerName red" id="redPlayerName">red</span>
+                        <span class="playerName green flr" id="greenPlayerName">green</span>
+                    </div>
                     <div class="dice-container dice-container-top row">
                         <div class="col1 col">
                             <div class="diceBox redDiceBox" id="redDice"></div>
                         </div>
                         <div class="col2 col">
                             <div class="settingsContiner">
-                                <button id="restart" class="setting"></button>
+                                <button id="sound" class="setting"></button>
+                                <!-- <button id="restart" class="setting"></button> -->
                             </div>
                         </div>
                         <div class="col3 col">
                             <div class="diceBox greenDiceBox" id="greenDice"></div>
                         </div>
                     </div>
-
                     <div class="ludo-board row">
+
+
                         <div class="row row1">
                             <div id="wrap-in-area">
                                 <div class="red-zone in-area col" id="rPlayer">
                                     <div class="row row1">
                                         <div class="col col1">
-                                            <div class="pawn-box r-circle" id="in-r-1"></div>
+                                            <div class="r-circle pawn-box" id="in-r-1"></div>
                                         </div>
                                         <div class="col col2">
                                             <div class="r-circle pawn-box" id="in-r-2"></div>
@@ -145,7 +117,7 @@ $name = $row['name'];
                                     </div>
                                 </div>
                             </div>
-                            
+
                             <div class="btw-g-r out-area col">
                                 <div class="row">
                                     <div class="col">
@@ -214,7 +186,6 @@ $name = $row['name'];
                                     </div>
                                 </div>
                             </div>
-                            
                             <div id="wrap-in-area">
                                 <div class="green-zone in-area col" id="gPlayer">
                                     <div class="row row1">
@@ -235,9 +206,11 @@ $name = $row['name'];
                                     </div>
                                 </div>
                             </div>
+
                         </div>
-                        
+
                         <div class="row row2">
+
                             <div class="btw-r-b out-area col col1">
                                 <div class="row">
                                     <div class="col">
@@ -300,7 +273,7 @@ $name = $row['name'];
                                     </div>
                                 </div>
                             </div>
-                            
+
                             <div class="win-area col col2">
                                 <div class="win-box" id="win-box1">
                                     <div class="win-pawn-box" id="g-win-pawn-box"></div>
@@ -377,9 +350,11 @@ $name = $row['name'];
                                         <div id="out26"></div>
                                     </div>
                                 </div>
+
                             </div>
+
                         </div>
-                        
+
                         <div class="row row3">
                             <div id="wrap-in-area">
                                 <div class="blue-zone in-area col" id="bPlayer">
@@ -401,8 +376,8 @@ $name = $row['name'];
                                     </div>
                                 </div>
                             </div>
-                            
                             <div class="btw-b-y out-area col">
+
                                 <div class="row">
                                     <div class="col">
                                         <div id="out44"></div>
@@ -469,8 +444,9 @@ $name = $row['name'];
                                         <div id="out37"></div>
                                     </div>
                                 </div>
+
+
                             </div>
-                            
                             <div id="wrap-in-area">
                                 <div class="yellow-zone in-area col" id="yPlayer">
                                     <div class="row row1">
@@ -491,9 +467,10 @@ $name = $row['name'];
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                    </div>
 
+                        </div>
+
+                    </div>
                     <div class="dice-container dice-container-bottom row">
                         <div class="col1 col">
                             <div class="diceBox blueDiceBox" id="blueDice"></div>
@@ -508,35 +485,36 @@ $name = $row['name'];
                             <div class="diceBox yellowDiceBox" id="yellowDice"></div>
                         </div>
                     </div>
+                    <div class="pt15">
+                        <span class="playerName blue" id="bluePlayerName">blue</span>
+                        <span class="playerName yellow flr" id="yellowPlayerName">yellow</span>
+                    </div>
                 </div>
+
             </div>
 
-            <!-- Add player info panels -->
-            <div class="player-panels">
-                <div id="player1Panel" class="player-panel" data-player="1">
-                    <div class="player-name"></div>
-                    <div class="player-status"></div>
-                </div>
-                <!-- Repeat for players 2-4 -->
-            </div>
-            
-            <!-- Add reconnection overlay -->
-            <div id="reconnectOverlay" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-                <div class="bg-white p-6 rounded-lg shadow-xl">
-                    <h3 class="text-xl font-bold mb-4">Connection Lost</h3>
-                    <p class="mb-4">Attempting to reconnect...</p>
-                    <div class="loading-spinner"></div>
-                </div>
-            </div>
         </div>
     </main>
-
-    <!-- Add game state debug panel -->
-    <div id="debugPanel" class="fixed bottom-0 right-0 bg-white p-4 rounded-lg shadow-lg m-4 hidden">
-        <h3 class="font-bold mb-2">Game State</h3>
-        <pre id="debugState" class="text-xs"></pre>
-    </div>
-
+    <style>
+        .pt15{
+            padding-top: 15px;
+        }
+        .flr{
+            float: right;
+        }
+        .playerName{
+            color: white;
+        }
+        .pb15{
+            padding-bottom: 15px;
+        }
+        .yellow{
+            text-align: right;
+        }
+        .green{
+            text-align: right;
+        }
+    </style>
     <div id="alertBox">
         <p id="alertHeading">Restart The Game</p>
         <button id="cancel" class="alertBtn">Cancel</button>
@@ -559,17 +537,27 @@ $name = $row['name'];
     </div>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <script src="script/ludo-game.js"></script>
-    <script src="script/game-state.js"></script>
-    <script src="script/websocket-handler.js"></script>
-    <script src="script/ui-manager.js"></script>
     <script>
-        // Pass PHP variables to JavaScript
-        var playerName = <?php echo json_encode($name); ?>;
-        var playerId = <?php echo json_encode($uid); ?>;
-        
-        // Enable debug mode in development
-        const DEBUG_MODE = <?php echo json_encode(getenv('ENV') === 'development'); ?>;
-    </script>
+        // Get current route
+        const path = window.location.pathname;
+          
+          // Function to load scripts dynamically
+          function loadScript(scriptPath) {
+              const script = document.createElement("script");
+              script.src = scriptPath;
+              script.defer = true;
+              document.body.appendChild(script);
+          }
+  
+          // Route Handling
+          if (path === "/") {
+              loadScript("home.js"); // Load home page script
+          } else if (path.includes("/ludo")) {
+              loadScript("ludo.js"); // Load ludo game script
+          } else {
+              document.getElementById("content").innerHTML = "<h2>404 - Page Not Found</h2>";
+          }
+  </script>
 </body>
 
 </html>

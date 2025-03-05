@@ -36,6 +36,7 @@ function findGame(noOfPlayer){
   console.log("Finding game");
   if(!socket){
     socket = io("http://localhost:3000");
+    console.log("Server Connected");
   }
   socket.emit("findGame",{noOfPlayer});
   socket.on("getRoomId",(gameId)=>{
